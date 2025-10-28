@@ -143,11 +143,12 @@ export const productType = defineType({
   preview: {
     select: {
       title: 'title',
-      media: 'images.0',
+      images: 'images',
       category: 'category.title',
       type: 'type',
     },
-    prepare({title, media, category, type}) {
+    prepare({title, images, category, type}) {
+      const media = Array.isArray(images) && images.length > 0 ? images[0] : undefined
       return {
         title,
         subtitle: `${category} • ${type}`,
