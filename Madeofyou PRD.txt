@@ -1,0 +1,172 @@
+﻿MadeOfYou.com Product Requirements Document (PRD)
+1. Project Overview & Goals
+The madeofyou.com MVP will serve as a high-performance content portal focused on educational resources and mindful activities for children aged 3-12.
+Business Goals & KPIs
+* Primary Goal: Audience building and lead capture.
+* Primary KPI: Maximize email addresses collected via the gated PDF resource bundles.
+* Secondary KPI: Maximize referral clicks/sales to external e-commerce partners (Shopify, Amazon).
+* Technical Goal: Achieve maximum SEO performance and page speed (Lighthouse scores) through Static Site Generation (SSG).
+Target Audience
+Parents and educators seeking high-quality, printable, or hardcopy educational materials for children aged 3-5, 6-8, and 9-12.
+________________
+
+
+2. Refined Sanity Content Schema
+The schema uses a reusable seo_metadata block for optimization and Boolean logic (is_gated) for the lead-generation flow.
+A. Core Content Schemas
+Schema Type
+	Field
+	Type
+	Required?
+	Notes
+	POST
+	title, body, category, tags, slug
+	String, Text, Reference, Array, Slug
+	Yes
+	Categories: education, technology.
+	PRODUCT
+	title, description, images, category, type
+	String, Text, Array, Reference, String
+	Yes
+	Categories: book, printable. Type: physical or digital.
+	
+
+	age_range, tags, link
+	String, Array, URL
+	Yes/No
+	Crucial for filtering. link is external referral URL.
+	RESOURCE
+	title, description, images, category, age_range
+	String, Text, Array, Reference, String
+	Yes
+	Categories: learning, playing, crosswords, etc.
+	
+
+	is_gated
+	Boolean
+	Yes
+	TRUE = Requires email; FALSE = Instant Download.
+	
+
+	instant_pdf, gated_pdf
+	File
+	Conditional
+	The file delivered based on is_gated status.
+	
+
+	cta_text, lead_form_id, tags
+	String, String, Array
+	Yes/No
+	tags allow filtering (e.g., multiplication, mindful activities).
+	PAGE
+	title, body, slug
+	String, Text, Slug
+	Yes
+	Static pages (About Us, etc.).
+	B. Reusable SEO Block (New)
+Schema Type
+	Field
+	Type
+	Required?
+	Purpose
+	SEO Metadata
+	seo_title
+	String (Max 60)
+	No
+	Custom SEO Title for search results.
+	(Reusable Block)
+	meta_description
+	Text (Max 160)
+	No
+	Custom description for search snippet.
+	
+
+	og_image
+	Image
+	No
+	The image used when the link is shared on social media.
+	(All core schemas (POST, PRODUCT, RESOURCE, PAGE) will include a reference to this SEO Metadata block.)
+________________
+
+
+3. Core Functional Requirements (User Stories)
+Epic 1: Resource Discovery & Lead Generation (Highest Priority)
+Story ID
+	User Story
+	Acceptance Criteria (AC)
+	FR.1
+	As a parent, I can filter Resources by Age Range, Category, and Tags on the listing page so I can quickly find relevant free content.
+	The /resources listing page displays active filters for Age Range, Category, and Tags. Filtering is fast (Client-Side) and built from the initial SSG payload.
+	FR.2 (Instant)
+	As a parent accessing a Simple Resource (is_gated: FALSE), clicking the CTA button immediately downloads the PDF file.
+	The CTA button uses the text from cta_text and links directly to the instant_pdf URL, triggering a browser download.
+	FR.3 (Gated)
+	As a parent accessing a Premium Resource Pack (is_gated: TRUE), clicking the CTA button opens a modal with an email capture form.
+	The modal form submits the email data securely to a Next.js API route proxy, which forwards it to the external email provider (lead_form_id).
+	FR.4
+	As a parent, after submitting my email for a Premium Pack, I am redirected to the download fulfillment page.
+	The fulfillment page provides the direct download link for the gated_pdf content.
+	Epic 2: Product Shopping & Referral
+Story ID
+	User Story
+	Acceptance Criteria (AC)
+	FR.5
+	As a parent, I can filter Products by Type (Physical/Digital), Age Range, and Tags (e.g., AR books, hardcopy).
+	The /products listing page provides active client-side filters for Product Type, Age Range, and Tags.
+	FR.6
+	As a parent, when viewing a product, I can see a Buy Now button which either links externally (Amazon) or embeds the Shopify checkout widget.
+	The button action is determined by the link field: Amazon/Other opens a new tab; Shopify embeds the widget. No internal cart.
+	Epic 3: SEO and Metadata (New)
+Story ID
+	User Story
+	Acceptance Criteria (AC)
+	SE.1
+	As a content editor, I can define custom SEO/Open Graph (OG) metadata for every page.
+	The reusable seo_metadata block is available on all content schemas (Post, Product, Resource, Page).
+	SE.2
+	As a system, every page must correctly render standard SEO and OG tags in the <head> element.
+	All SSG pages must dynamically render <title>, <meta name="description">, og:title, og:image, etc., using the custom data or intelligent fallbacks.
+	________________
+
+
+4. Technology Stack and Architecture
+A. Technology Stack
+Area
+	Technology
+	Purpose
+	Frontend
+	Next.js (App Router)
+	Performance, Routing, and SSG.
+	CMS
+	Sanity.io
+	Headless CMS and content API via GROQ.
+	Styling/UI
+	Tailwind CSS & Shadcn/ui
+	Rapid, accessible, utility-first UI development.
+	E-commerce
+	Shopify (Buy Button/Widget)
+	Externalized, embedded checkout.
+	B. Architectural Strategy (Optimized for SEO)
+* Rendering Method: Static Site Generation (SSG) for all public content pages (Post, Product, Resource, Listing). This guarantees that Google can crawl the full, rendered HTML instantly.
+* Data Fetching: All content is fetched from Sanity via GROQ during the build process (next build). There are no runtime API content calls for SEO-critical pages.
+* Filtering: Filters are rendered via SSG on initial load, and the dynamic filtering logic is handled Client-Side (CSR) using the static JSON data payload for maximum speed.
+* Security: Next.js API Routes (Serverless Functions) will be used as a secure proxy to receive and forward lead-capture data to the external email provider, preventing the exposure of private API keys.
+________________
+
+
+5. Out-of-Scope (Excluded from MVP)
+Feature Area
+	Exclusion
+	Rationale
+	Internationalization
+	Multi-lingual support for the website.
+	MVP is English-only.
+	E-commerce
+	Internal shopping cart, checkout, or payment processing (Stripe, PayPal, etc.).
+	The site is purely a referral portal; transactions are handled by external services.
+	User Management
+	User registration, login, profile management, or saving features.
+	No personalized content is stored.
+	Search
+	Full-text site-wide search functionality.
+	Content discovery relies solely on Category, Tag, and Age Range filtering.
